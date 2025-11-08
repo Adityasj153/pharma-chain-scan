@@ -7,7 +7,9 @@ import { Loader2, Package, Calendar, MapPin, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import QRCode from "qrcode";
+import type { Database } from "@/integrations/supabase/types";
 
 interface Batch {
   id: string;
@@ -105,6 +107,30 @@ export default function BatchList() {
     return status.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
   };
 
+  const handleStatusChange = async (batchId: string, newStatus: Database["public"]["Enums"]["batch_status"]) => {
+    try {
+      const { error } = await supabase
+        .from("batches")
+        .update({ status: newStatus })
+        .eq("id", batchId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status Updated",
+        description: `Batch status changed to ${getStatusLabel(newStatus)}`,
+      });
+
+      fetchBatches();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -138,6 +164,7 @@ export default function BatchList() {
               <TableHead>Manufacturing</TableHead>
               <TableHead>Expiry</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Update Status</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>QR Code</TableHead>
             </TableRow>
@@ -171,6 +198,22 @@ export default function BatchList() {
                   <Badge className={getStatusColor(batch.status)}>
                     {getStatusLabel(batch.status)}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={batch.status}
+                    onValueChange={(value) => handleStatusChange(batch.id, value as Database["public"]["Enums"]["batch_status"])}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="created">Created</SelectItem>
+                      <SelectItem value="in_transit">In Transit</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="received">Received</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   {batch.current_location && (
