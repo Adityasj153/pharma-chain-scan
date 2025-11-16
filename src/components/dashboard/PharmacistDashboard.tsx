@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Pill, QrCode, Package } from "lucide-react";
+import { LogOut, Pill, QrCode, Package, HeartPulse } from "lucide-react";
 import ReceivedBatchList from "@/components/pharmacist/ReceivedBatchList";
 import QRScanner from "@/components/pharmacist/QRScanner";
+import AvailableMedicinesTable from "@/components/pharmacist/AvailableMedicinesTable";
 
 export default function PharmacistDashboard() {
   const { signOut } = useAuth();
@@ -37,24 +38,32 @@ export default function PharmacistDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="scan" className="space-y-6">
+        <Tabs defaultValue="medicines" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="medicines">
+              <HeartPulse className="mr-2 h-4 w-4" />
+              Available Medicines
+            </TabsTrigger>
+            <TabsTrigger value="inventory">
+              <Package className="mr-2 h-4 w-4" />
+              Batch Inventory
+            </TabsTrigger>
             <TabsTrigger value="scan">
               <QrCode className="mr-2 h-4 w-4" />
               Scan QR Code
             </TabsTrigger>
-            <TabsTrigger value="inventory">
-              <Package className="mr-2 h-4 w-4" />
-              My Inventory
-            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="scan" className="space-y-4">
-            <QRScanner onSuccess={handleRefresh} />
+          <TabsContent value="medicines" className="space-y-4">
+            <AvailableMedicinesTable key={refreshTrigger} />
           </TabsContent>
 
           <TabsContent value="inventory" className="space-y-4">
             <ReceivedBatchList key={refreshTrigger} />
+          </TabsContent>
+
+          <TabsContent value="scan" className="space-y-4">
+            <QRScanner onSuccess={handleRefresh} />
           </TabsContent>
         </Tabs>
       </main>
