@@ -32,6 +32,27 @@ export default function AvailableMedicinesTable() {
 
   useEffect(() => {
     fetchMedicines();
+
+    // Subscribe to real-time updates for inventory changes
+    const channel = supabase
+      .channel('pharmacy-inventory')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'batches',
+          filter: `pharmacist_id=eq.${user?.id}`
+        },
+        () => {
+          fetchMedicines();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchMedicines = async () => {
