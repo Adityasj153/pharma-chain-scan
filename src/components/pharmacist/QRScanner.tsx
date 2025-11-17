@@ -37,7 +37,7 @@ export default function QRScanner({ onSuccess }: QRScannerProps) {
           )
         `)
         .eq("qr_code", qrCode)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
