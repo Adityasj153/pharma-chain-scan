@@ -35,6 +35,27 @@ export default function BatchList() {
 
   useEffect(() => {
     fetchBatches();
+
+    // Subscribe to real-time updates for batches
+    const channel = supabase
+      .channel('manufacturer-batches')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'batches',
+          filter: `manufacturer_id=eq.${user?.id}`
+        },
+        () => {
+          fetchBatches();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchBatches = async () => {

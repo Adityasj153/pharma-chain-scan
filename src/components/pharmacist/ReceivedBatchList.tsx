@@ -30,6 +30,27 @@ export default function ReceivedBatchList() {
 
   useEffect(() => {
     fetchBatches();
+
+    // Subscribe to real-time updates for received batches
+    const channel = supabase
+      .channel('pharmacist-batches')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'batches',
+          filter: `pharmacist_id=eq.${user?.id}`
+        },
+        () => {
+          fetchBatches();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchBatches = async () => {
